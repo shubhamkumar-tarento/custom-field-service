@@ -51,7 +51,6 @@ class EsUtilServiceImplTest {
     @Mock
     private ObjectMapper objectMapper;
 
-    @InjectMocks
     private EsUtilServiceImpl esUtilService;
 
     private SearchCriteria sampleCriteria;
@@ -64,6 +63,7 @@ class EsUtilServiceImplTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        esUtilService = new EsUtilServiceImpl(elasticsearchClient, objectMapper);
         sampleCriteria = new SearchCriteria();
         sampleCriteria.setPageNumber(0);
         sampleCriteria.setPageSize(2);
@@ -459,7 +459,9 @@ class EsUtilServiceImplTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 esUtilService.updateDocument(index, entityId, updatedDocument, "/schema.json"));
 
-        assertTrue(exception.getMessage().contains("Errod occured while updating es index"));
+        assertInstanceOf(CustomException.class, exception);
+        assertEquals("Error occurred while updating es index", ((CustomException) exception).getCode());
+        assertTrue(exception.getMessage().contains("simulated IO"));
         verify(objectMapper).readValue(any(InputStream.class), any(TypeReference.class));
     }
 

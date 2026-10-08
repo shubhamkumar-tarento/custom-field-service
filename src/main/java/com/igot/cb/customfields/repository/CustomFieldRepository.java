@@ -1,6 +1,6 @@
-package com.igot.cb.customFields.repository;
+package com.igot.cb.customfields.repository;
 
-import com.igot.cb.customFields.entity.CustomFieldEntity;
+import com.igot.cb.customfields.entity.CustomFieldEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

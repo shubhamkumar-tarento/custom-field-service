@@ -37,8 +37,12 @@ public class CassandraOperationImpl implements CassandraOperation {
 
     private Logger logger = LoggerFactory.getLogger(CassandraOperationImpl.class);
 
+    private final CassandraConnectionManager connectionManager;
+
     @Autowired
-    CassandraConnectionManager connectionManager;
+    public CassandraOperationImpl(CassandraConnectionManager connectionManager) {
+        this.connectionManager = connectionManager;
+    }
 
     private Select processQuery(String keyspaceName, String tableName, Map<String, Object> propertyMap,
                                 List<String> fields) {
@@ -108,7 +112,7 @@ public class CassandraOperationImpl implements CassandraOperation {
             CqlSession session = connectionManager.getSession(keyspaceName);
             ResultSet results = session.execute(selectQuery.build());
             response = CassandraUtil.createResponse(results);
-            logger.info(response.toString());
+            logger.info("{}", response);
 
         } catch (Exception e) {
             logger.error(Constants.EXCEPTION_MSG_FETCH + tableName + " : " + e.getMessage(), e);
@@ -159,7 +163,7 @@ public class CassandraOperationImpl implements CassandraOperation {
     public Map<String,Object> updateRecord(
             String keyspaceName, String tableName, Map<String, Object> request) {
         long startTime = System.currentTimeMillis();
-        logger.debug("Cassandra Service updateRecord method started at ==" + startTime);
+        logger.debug("Cassandra Service updateRecord method started at =={}", startTime);
         Map<String,Object> response = new HashMap<>();
         String query = getUpdateQueryStatement(keyspaceName, tableName, request);
         try {
@@ -181,7 +185,7 @@ public class CassandraOperationImpl implements CassandraOperation {
             connectionManager.getSession(keyspaceName).execute(boundStatement);
             response.put(Constants.RESPONSE, Constants.SUCCESS);
             if (tableName.equalsIgnoreCase(Constants.USER)) {
-                logger.info("Cassandra Service updateRecord in user table :" + request);
+                logger.info("Cassandra Service updateRecord in user table :{}", request);
             }
         } catch (Exception e) {
             if (e.getMessage().contains(Constants.UNKNOWN_IDENTIFIER)) {
@@ -213,13 +217,15 @@ public class CassandraOperationImpl implements CassandraOperation {
 
     protected void logQueryElapseTime(
             String operation, long startTime, String query) {
-        logger.info("Cassandra query : " + query);
+        logger.info("Cassandra query : {}", query);
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
         String message =
                 "Cassandra operation {0} started at {1} and completed at {2}. Total time elapsed is {3}.";
-        MessageFormat mf = new MessageFormat(message);
-        logger.debug(mf.format(new Object[] {operation, startTime, stopTime, elapsedTime}));
+        if (logger.isDebugEnabled()) {
+            MessageFormat mf = new MessageFormat(message);
+            logger.debug(mf.format(new Object[] {operation, startTime, stopTime, elapsedTime}));
+        }
     }
 
     public Map<String, Object> updateRecordByCompositeKey(String keyspaceName, String tableName, Map<String, Object> updateAttributes,
@@ -240,7 +246,6 @@ public class CassandraOperationImpl implements CassandraOperation {
             response.put(Constants.RESPONSE, Constants.SUCCESS);
         } catch (Exception e) {
             String errMsg = String.format("Exception occurred while updating record to %s: %s", tableName, e.getMessage());
-            logger.error(errMsg, e);
             response.put(Constants.RESPONSE, Constants.FAILED);
             response.put(Constants.ERROR_MESSAGE, errMsg);
             throw e;
@@ -250,20 +255,12 @@ public class CassandraOperationImpl implements CassandraOperation {
 
     @Override
     public void deleteRecord(String keyspaceName, String tableName, Map<String, Object> compositeKeyMap) {
-        Delete delete = null;
-        try {
-            CqlSession session = connectionManager.getSession(keyspaceName);
-            delete = (Delete) QueryBuilder.deleteFrom(keyspaceName, tableName);
-
-            for (Entry<String, Object> entry : compositeKeyMap.entrySet()) {
-                delete = delete.whereColumn(entry.getKey()).isEqualTo(QueryBuilder.literal(entry.getValue()));
-            }
-            session.execute(delete.build());
-        } catch (Exception e) {
-            logger.error(String.format("CassandraOperationImpl: deleteRecord by composite key. %s %s %s",
-                    Constants.EXCEPTION_MSG_DELETE, tableName, e.getMessage()));
-            throw e;
+        Delete delete = (Delete) QueryBuilder.deleteFrom(keyspaceName, tableName);
+        CqlSession session = connectionManager.getSession(keyspaceName);
+        for (Entry<String, Object> entry : compositeKeyMap.entrySet()) {
+            delete = delete.whereColumn(entry.getKey()).isEqualTo(QueryBuilder.literal(entry.getValue()));
         }
+        session.execute(delete.build());
     }
 
     private Select processQueryWithFiltering(String keyspaceName, String tableName, Map<String, Object> propertyMap,

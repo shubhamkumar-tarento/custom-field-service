@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 
 /**
@@ -36,6 +35,7 @@ public class CassandraConnectionManagerImpl implements CassandraConnectionManage
     private static final Logger logger = LoggerFactory.getLogger(CassandraConnectionManagerImpl.class);
     private static final Map<String, CqlSession> cassandraSessionMap = new ConcurrentHashMap<>(2);
     private static CqlSession session;
+    private static final String DATACENTER1 = "datacenter1";
 
     /**
      * Method invoked after bean creation for initialization
@@ -70,7 +70,7 @@ public class CassandraConnectionManagerImpl implements CassandraConnectionManage
     /**
      * Creates a Cassandra connection based on properties
      */
-    private CqlSession createCassandraConnectionWithKeySpaces(String keySpaceName) {
+    private static CqlSession createCassandraConnectionWithKeySpaces(String keySpaceName) {
         try {
             // Load the properties required for connection
             PropertiesCache cache = PropertiesCache.getInstance();
@@ -84,16 +84,16 @@ public class CassandraConnectionManagerImpl implements CassandraConnectionManage
             List<String> hosts = Arrays.asList(cassandraHost.split(","));
             List<InetSocketAddress> contactPoints = hosts.stream()
                     .map(host -> new InetSocketAddress(host.trim(), 9042)) // Assuming default port 9042
-                    .collect(Collectors.toList());
+                    .toList();
             List<String> contactPointsString = hosts.stream()
                     .map(host -> host.trim() + ":9042") // Ensure proper host:port format
-                    .collect(Collectors.toList());
+                    .toList();
             ConsistencyLevel consistencyLevel = getConsistencyLevel();
             String consistencyLevelName = consistencyLevel != null ? consistencyLevel.name() : ConsistencyLevel.LOCAL_ONE.name();
             DriverConfigLoader loader = DriverConfigLoader.programmaticBuilder()
                     .withStringList(DefaultDriverOption.CONTACT_POINTS, contactPointsString)
                     .withString(DefaultDriverOption.REQUEST_CONSISTENCY, consistencyLevelName)
-                    .withString(DefaultDriverOption.LOAD_BALANCING_LOCAL_DATACENTER, "datacenter1")
+                    .withString(DefaultDriverOption.LOAD_BALANCING_LOCAL_DATACENTER, DATACENTER1)
                     .withInt(DefaultDriverOption.CONNECTION_POOL_LOCAL_SIZE,
                             Integer.parseInt(cache.getProperty(Constants.CORE_CONNECTIONS_PER_HOST_FOR_LOCAL)))
                     .withInt(DefaultDriverOption.CONNECTION_POOL_REMOTE_SIZE,
@@ -110,28 +110,27 @@ public class CassandraConnectionManagerImpl implements CassandraConnectionManage
             if (StringUtils.isNotBlank(keySpaceName)) {
                 sessionWithKeyspaces = CqlSession.builder()
                         .addContactPoints(contactPoints)
-                        .withLocalDatacenter("datacenter1")
+                        .withLocalDatacenter(DATACENTER1)
                         .withKeyspace(keySpaceName)
                         .withConfigLoader(loader)
                         .build();
             } else {
                 sessionWithKeyspaces = CqlSession.builder()
                         .addContactPoints(contactPoints)
-                        .withLocalDatacenter("datacenter1")
+                        .withLocalDatacenter(DATACENTER1)
                         .withConfigLoader(loader)
                         .build();
             }
-            logger.info("Connected to the keyspaces: " + keySpaceName);
+            logger.info("Connected to the keyspaces: {}", keySpaceName);
             // Get metadata and log cluster information
             final Metadata metadata = sessionWithKeyspaces.getMetadata();
-            logger.info(String.format("Connected to cluster: %s", metadata.getClusterName()));
+            logger.info("Connected to cluster: {}", metadata.getClusterName());
             // Log nodes in the cluster
             for (Node host : metadata.getNodes().values()) {
-                logger.info(String.format("Datacenter: %s; Host: %s; Rack: %s", host.getDatacenter(), host.getEndPoint(), host.getRack()));
+                logger.info("Datacenter: {}; Host: {}; Rack: {}", host.getDatacenter(), host.getEndPoint(), host.getRack());
             }
             return sessionWithKeyspaces;
         } catch (Exception e) {
-            logger.error("Error while creating Cassandra connection", e);
             throw new CustomException(
                     Constants.ERROR,
                     e.getMessage(),
@@ -139,11 +138,10 @@ public class CassandraConnectionManagerImpl implements CassandraConnectionManage
         }
     }
 
-    private void createCassandraConnection() {
+    private static void createCassandraConnection() {
         try {
             session = createCassandraConnectionWithKeySpaces(null);
         } catch (Exception e) {
-            logger.error("Error while creating Cassandra connection", e);
             throw new CustomException(
                     Constants.ERROR,
                     e.getMessage(),
@@ -158,14 +156,14 @@ public class CassandraConnectionManagerImpl implements CassandraConnectionManage
      */
     private static ConsistencyLevel getConsistencyLevel() {
         String consistency = PropertiesCache.getInstance().readProperty(Constants.SUNBIRD_CASSANDRA_CONSISTENCY_LEVEL);
-        logger.info("CassandraConnectionManagerImpl:getConsistencyLevel: level = " + consistency);
+        logger.info("CassandraConnectionManagerImpl:getConsistencyLevel: level = {}", consistency);
         if (StringUtils.isBlank(consistency)) return null;
 
         try {
             return DefaultConsistencyLevel.valueOf(consistency.toUpperCase());
         } catch (IllegalArgumentException exception) {
-            logger.info("CassandraConnectionManagerImpl:getConsistencyLevel: Exception occurred with error message = "
-                    + exception.getMessage());
+            logger.info("CassandraConnectionManagerImpl:getConsistencyLevel: Exception occurred with error message = {}",
+                    exception.getMessage());
         }
         return null;
     }

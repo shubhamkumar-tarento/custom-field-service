@@ -1,4 +1,4 @@
-package com.igot.cb.customFields.service.impl;
+package com.igot.cb.customfields.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

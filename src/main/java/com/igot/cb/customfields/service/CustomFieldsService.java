@@ -1,4 +1,4 @@
-package com.igot.cb.customFields.service;
+package com.igot.cb.customfields.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.igot.cb.pores.elasticsearch.dto.SearchCriteria;

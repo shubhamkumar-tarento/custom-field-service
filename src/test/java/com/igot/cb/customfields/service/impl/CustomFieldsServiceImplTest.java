@@ -1,12 +1,12 @@
-package com.igot.cb.customFields.service.impl;
+package com.igot.cb.customfields.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.igot.cb.authentication.util.AccessTokenValidator;
-import com.igot.cb.customFields.entity.CustomFieldEntity;
-import com.igot.cb.customFields.repository.CustomFieldRepository;
+import com.igot.cb.customfields.entity.CustomFieldEntity;
+import com.igot.cb.customfields.repository.CustomFieldRepository;
 import com.igot.cb.pores.cache.CacheService;
 import com.igot.cb.pores.elasticsearch.dto.SearchCriteria;
 import com.igot.cb.pores.elasticsearch.dto.SearchResult;
@@ -36,7 +36,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CustomFieldsServiceImplTest {
 
-    @InjectMocks
     private CustomFieldsServiceImpl service;
 
     @Mock
@@ -84,6 +83,8 @@ class CustomFieldsServiceImplTest {
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
+        service = new CustomFieldsServiceImpl(customFieldRepository, payloadValidation, accessTokenValidator,
+                objectMapper, esUtilService, cacheService, cbServerProperties, cassandraOperation);
     }
 
     @Test

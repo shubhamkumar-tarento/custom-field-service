@@ -1,11 +1,10 @@
-package com.igot.cb.customFields.controller;
+package com.igot.cb.customfields.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.igot.cb.customFields.service.CustomFieldsService;
+import com.igot.cb.customfields.service.CustomFieldsService;
 import com.igot.cb.pores.elasticsearch.dto.SearchCriteria;
 import com.igot.cb.pores.util.ApiResponse;
 import com.igot.cb.pores.util.Constants;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,8 +14,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/customFields/v1")
 public class CustomFieldsController {
-    @Autowired
-    private CustomFieldsService customFieldsService;
+    private final CustomFieldsService customFieldsService;
+
+    public CustomFieldsController(CustomFieldsService customFieldsService) {
+        this.customFieldsService = customFieldsService;
+    }
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse> createCustomFields(@RequestBody JsonNode customFieldsData,

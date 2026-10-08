@@ -24,7 +24,7 @@ public class ApiResponse {
     private HttpStatus responseCode;
 
     @JsonIgnore
-    private transient Map<String, Object> response = new HashMap<>();
+    private Map<String, Object> response = new HashMap<>();
 
     public ApiResponse() {
         this.ver = "v1";

@@ -29,7 +29,7 @@ public class RedisConfig {
   @Value("${spring.redis.port}")
   private int redisPort;
 
-  private final long redisTimeout = 60000;
+  private static final long redisTimeout = 60000;
 
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {

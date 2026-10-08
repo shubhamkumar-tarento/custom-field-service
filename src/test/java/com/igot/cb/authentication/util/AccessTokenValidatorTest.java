@@ -38,7 +38,7 @@ class AccessTokenValidatorTest {
     private AccessTokenValidator accessTokenValidator;
 
     @Spy
-    private AccessTokenValidator spyAccessTokenValidator;
+    private AccessTokenValidator spyAccessTokenValidator = new AccessTokenValidator(null);
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -154,7 +154,7 @@ class AccessTokenValidatorTest {
 
     @Test
     void testCheckIss_invalidIssuer_returnsFalse() throws Exception {
-        validator = new AccessTokenValidator();
+        validator = new AccessTokenValidator(null);
 
         Method method = AccessTokenValidator.class.getDeclaredMethod("checkIss", String.class);
         method.setAccessible(true);
@@ -166,7 +166,7 @@ class AccessTokenValidatorTest {
 
     @Test
     void testCheckIss_blankIssuer_returnsFalse() throws Exception {
-        validator = new AccessTokenValidator();
+        validator = new AccessTokenValidator(null);
 
         Method method = AccessTokenValidator.class.getDeclaredMethod("checkIss", String.class);
         method.setAccessible(true);

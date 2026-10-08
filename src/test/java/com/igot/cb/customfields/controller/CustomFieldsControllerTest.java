@@ -1,8 +1,8 @@
-package com.igot.cb.customFields.controller;
+package com.igot.cb.customfields.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.igot.cb.customFields.service.CustomFieldsService;
+import com.igot.cb.customfields.service.CustomFieldsService;
 import com.igot.cb.pores.elasticsearch.dto.SearchCriteria;
 import com.igot.cb.pores.util.ApiResponse;
 import com.igot.cb.pores.util.Constants;
